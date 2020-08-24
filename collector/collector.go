@@ -1,4 +1,4 @@
-package main
+package collector
 
 import (
 	"database/sql"
@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -50,11 +50,10 @@ var (
 )
 
 func NewExporter(connectionString string, namespace string) *Exporter {
-
 	db, err := getDB(connectionString)
 
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
 	return &Exporter{
@@ -133,7 +132,7 @@ func queryNamespaceMapping(ch chan<- prometheus.Metric, db *sql.DB, namespace st
 		for idx, columnName := range columnNames {
 
 			if columnName == "database" {
-				log.Debug("Fetching data for row belonging to database ", columnData[idx])
+				logrus.Debug("Fetching data for row belonging to database ", columnData[idx])
 				database = columnData[idx].(string)
 			}
 
@@ -161,10 +160,11 @@ func getDB(conn string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
+	// not supported by pgbouncer
+	//err = db.Ping()
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
@@ -214,7 +214,7 @@ func dbToFloat64(t interface{}) (float64, bool) {
 	case string:
 		result, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			log.Infoln("Could not parse string:", err)
+			logrus.Infoln("Could not parse string:", err)
 			return math.NaN(), false
 		}
 		return result, true
@@ -231,17 +231,17 @@ func queryNamespaceMappings(ch chan<- prometheus.Metric, db *sql.DB, metricMap m
 	namespaceErrors := make(map[string]error)
 
 	for namespace, mapping := range metricMap {
-		log.Debugln("Querying namespace: ", namespace)
+		logrus.Debugln("Querying namespace: ", namespace)
 		nonFatalErrors, err := queryNamespaceMapping(ch, db, namespace, mapping)
-		// Serious error - a namespace disappeard
+		// Serious error - a namespace disappeared
 		if err != nil {
 			namespaceErrors[namespace] = err
-			log.Infoln(err)
+			logrus.Infoln(err)
 		}
 		// Non-serious errors - likely version or parsing problems.
 		if len(nonFatalErrors) > 0 {
 			for _, err := range nonFatalErrors {
-				log.Infoln(err.Error())
+				logrus.Infoln(err.Error())
 			}
 		}
 	}
@@ -290,7 +290,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 	defer func(begun time.Time) {
 		e.duration.Set(time.Since(begun).Seconds())
 	}(time.Now())
-	log.Info("Starting scrape")
+	logrus.Info("Starting scrape")
 
 	e.error.Set(0)
 	e.totalScrapes.Inc()
@@ -300,7 +300,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 
 	errMap := queryNamespaceMappings(ch, e.db, e.metricMap)
 	if len(errMap) > 0 {
-		log.Fatal(errMap)
+		logrus.Fatal(errMap)
 		e.error.Set(1)
 	}
 }
