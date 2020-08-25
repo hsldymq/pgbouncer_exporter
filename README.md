@@ -13,7 +13,7 @@ go build -o pgbouncer_exporter ./cmd/pgbouncer_exporter.go
     -pgBouncer.connectionString=postgres://user:password@host:port/dbname?sslmode=disable
 ```
 
-It exports metrics at `0.0.0.0:9127/metrics`
+It exports metrics at `:9127/metrics`
 
 ## As a library
 
