@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"io"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,6 +15,14 @@ func Entry() *logrus.Entry {
 
 func SetEntry(e *logrus.Entry) {
 	baseEntry = e
+}
+
+func SetLevel(l logrus.Level) {
+	baseLogger.SetLevel(l)
+}
+
+func SetOutput(output io.Writer) {
+	baseLogger.SetOutput(output)
 }
 
 func SetFormatter(formatter logrus.Formatter) {
