@@ -231,17 +231,17 @@ func queryNamespaceMappings(ch chan<- prometheus.Metric, db *sql.DB, metricMap m
 	namespaceErrors := make(map[string]error)
 
 	for namespace, mapping := range metricMap {
-		logger.Entry().Debugln("Querying namespace: ", namespace)
+		logger.Entry().WithField("namespace", namespace).Debugln("Querying")
 		nonFatalErrors, err := queryNamespaceMapping(ch, db, namespace, mapping)
 		// Serious error - a namespace disappeared
 		if err != nil {
 			namespaceErrors[namespace] = err
-			logger.Entry().Infoln(err)
+			logger.Entry().WithError(err).Error("query namespace mapping")
 		}
 		// Non-serious errors - likely version or parsing problems.
 		if len(nonFatalErrors) > 0 {
 			for _, err := range nonFatalErrors {
-				logger.Entry().Infoln(err.Error())
+				logger.Entry().WithError(err).Warning(err.Error())
 			}
 		}
 	}
@@ -290,7 +290,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) {
 	defer func(begun time.Time) {
 		e.duration.Set(time.Since(begun).Seconds())
 	}(time.Now())
-	logger.Entry().Info("Starting scrape")
+	logger.Entry().Info("starting scrape")
 
 	e.error.Set(0)
 	e.totalScrapes.Inc()
