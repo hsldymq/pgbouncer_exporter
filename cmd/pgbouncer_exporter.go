@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/hsldymq/pgbouncer_exporter/collector"
+	"github.com/hsldymq/pgbouncer_exporter/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -49,7 +49,7 @@ func main() {
 	e := collector.NewExporter(connectionString, namespace)
 	prometheus.MustRegister(e)
 
-	logrus.Infoln("Starting pgbouncer exporter version: ", version.Info())
+	logger.Entry().Infoln("Starting pgbouncer exporter version: ", version.Info())
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +57,6 @@ func main() {
 	})
 
 	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
-		logrus.WithError(err).Fatal("exporter shutdown")
+		logger.Entry().WithError(err).Fatal("exporter shutdown")
 	}
 }
