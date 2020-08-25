@@ -1,17 +1,19 @@
 # PgBouncer exporter
 
 Prometheus exporter for PgBouncer.
-Exports metrics at `:9127/metrics`
 
-## As a tool
+## As an exporter
 ### Building and running
 ```shell
 go build -o pgbouncer_exporter ./cmd/pgbouncer_exporter.go
+
 ./pgbouncer_exporter \
     -web.listen-address=:9127 \
     -web.telemetry-path=/metrics \
     -pgBouncer.connectionString=postgres://user:password@host:port/dbname?sslmode=disable
 ```
+
+It exports metrics at `0.0.0.0:9127/metrics`
 
 ## As a library
 
