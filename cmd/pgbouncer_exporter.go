@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	namespace = "pgbouncer"
 	indexHTML = `
 	<html>
 		<head>
@@ -41,12 +40,13 @@ func main() {
 		listenAddress           = flag.String("web.listen-address", ":9127", "Address on which to expose metrics and web interface.")
 		connectionStringPointer = flag.String("pgBouncer.connectionString", "postgres://postgres:postgres@localhost:6543/pgbouncer?sslmode=disable",
 			"Connection string for accessing pgBouncer. Can also be set using environment variable DATA_SOURCE_NAME")
-		metricsPath = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+		metricsPath      = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+		metricsNamespace = flag.String("telemetry.namespace", "pgbouncer", "metrics namespace")
 	)
 	flag.Parse()
 
 	connectionString := getEnv("DATA_SOURCE_NAME", *connectionStringPointer)
-	e := collector.NewExporter(connectionString, namespace)
+	e := collector.NewExporter(connectionString, *metricsNamespace)
 	prometheus.MustRegister(e)
 
 	logger.Entry().Infoln("Starting pgbouncer exporter version: ", version.Info())
